@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Future Studios BD
 
-## Getting Started
+A restrained e-commerce frontend assessment built with Next.js App Router,
+React, TypeScript, and Tailwind CSS.
 
-First, run the development server:
+## Requirements
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
+- Node.js 24.x (see `.nvmrc`). Next.js 16.3.5 requires Node >=20.9.0;
+  this project targets Node 24 LTS.
+- pnpm 10.17.0, declared in `package.json`.
+
+## Setup
+
+Select Node 24 with your runtime manager (`nvm use` if using nvm), then run:
+
+```sh
+node --version
+pnpm --version
+pnpm install --frozen-lockfile
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Checks
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```sh
+pnpm lint
+pnpm typecheck
+pnpm build
+pnpm start
+```
 
-## Learn More
+Typechecking generates Next.js route types before running TypeScript.
+The committed pnpm lockfile records dependency resolution.
 
-To learn more about Next.js, take a look at the following resources:
+## Current scope
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The foundation includes a responsive shared header, homepage, metadata, favicon,
+and a heading-only `/products` destination. Product discovery and commerce
+features are not yet implemented. shadcn/ui setup is deferred until a component
+requires it.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Structure and rendering
 
-## Deploy on Vercel
+- `src/app`: Server Component routes and root layout, metadata, global styles.
+- `src/components/shared`: shared server-rendered header.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+There are no application Client Components, data fetching, client stores, or
+memoization in this foundation. Navigation uses Next.js links. System typography
+avoids remote font downloads. Shared styles define a 1280px container, responsive
+gutters, restrained colors, and visible keyboard focus.
