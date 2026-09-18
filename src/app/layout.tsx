@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { SiteHeader } from "@/components/shared/site-header";
+import { parseSiteUrl } from "@/lib/product-seo";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: parseSiteUrl(process.env.SITE_URL),
   title: { default: "Future Studios BD", template: "%s | Future Studios BD" },
   description: "Browse the Future Studios BD product catalog.",
 };

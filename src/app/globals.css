@@ -148,7 +148,9 @@ h1 {
 .product-grid > * { min-width: 0; }
 .product-image { position: relative; aspect-ratio: 1; overflow: hidden; background: #f5f6f4; }
 .product-image img { object-fit: contain; }
-.product-card h2 { margin-top: 12px; font-size: 0.9375rem; line-height: 1.45; font-weight: 600; overflow-wrap: anywhere; }
+.product-card h2, .product-card h3 { margin-top: 12px; font-size: 0.9375rem; line-height: 1.45; font-weight: 600; overflow-wrap: anywhere; }
+.product-card-link { display: block; }
+.product-card-link:hover :is(h2, h3) { text-decoration: underline; text-underline-offset: 3px; }
 .product-category, .product-rating, .product-stock { font-size: 0.8125rem; color: var(--muted); margin-top: 4px; }
 .product-price { margin-top: 8px; font-size: 1rem; font-weight: 600; }
 .product-pagination { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; margin-top: 48px; }
@@ -178,4 +180,32 @@ h1 {
 @media (min-width: 1024px) {
   .filter-fields { grid-template-columns: 1fr 1.4fr 1fr; gap: 24px; }
   .product-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* Product detail shares the catalog's imagery, type, and structural borders. */
+.detail-page { padding-block: 24px 56px; }
+.detail-back { margin-bottom: 24px; font-size: 0.875rem; }
+.detail-overview { display: grid; gap: 28px; }
+.detail-overview > * { min-width: 0; }
+.detail-image { width: 100%; max-width: 640px; }
+.detail-category { color: var(--muted); font-size: 0.875rem; margin-bottom: 12px; }
+.detail-information h1 { overflow-wrap: anywhere; }
+.detail-muted { color: var(--muted); margin-top: 12px; font-size: 0.875rem; }
+.detail-price { font-size: 1.5rem; font-weight: 600; margin-top: 24px; }
+.detail-stock { color: var(--muted); font-size: 0.875rem; margin-top: 4px; }
+.detail-description { max-width: 65ch; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border); overflow-wrap: anywhere; }
+.detail-section { margin-top: 40px; padding-top: 28px; border-top: 1px solid var(--border); }
+.detail-section > h2 { font-size: 1.25rem; font-weight: 600; margin-bottom: 24px; }
+.review-list { list-style: none; margin: 0; padding: 0; max-width: 65ch; }
+.review-list li { padding-block: 20px; border-top: 1px solid var(--border); }
+.review-list li:first-child { border-top: 0; padding-top: 0; }
+.review-author { font-size: 0.875rem; font-weight: 600; }
+.review-body { margin-top: 8px; overflow-wrap: anywhere; }
+@media (min-width: 768px) {
+  .detail-page { padding-block: 32px 72px; }
+  .detail-section { margin-top: 48px; padding-top: 32px; }
+}
+@media (min-width: 1024px) {
+  .detail-overview { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 48px; align-items: start; }
+  .detail-information { padding-top: 12px; }
 }

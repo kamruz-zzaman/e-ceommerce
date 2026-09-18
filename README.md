@@ -44,8 +44,9 @@ and server-rendered product discovery at `/products`. A local 520-product
 assessment catalog is accessed through a server-only product service. Query normalization, search,
 filtering, sorting, pagination, and detail/related lookup are implemented and
 unit tested. Discovery includes search, grouped filters, sorting, pagination, and
-loading/empty/error states. Product detail pages and commerce features are not yet
-implemented; cards intentionally have no links to missing detail routes.
+loading/empty/error states. Server-rendered product details at `/products/[slug]`
+include reviews, related products, and product-derived SEO. Cart and checkout
+are not yet implemented.
 shadcn/ui setup is deferred until a component requires it.
 
 ## Structure and rendering
@@ -67,7 +68,8 @@ shadcn/ui setup is deferred until a component requires it.
 Only discovery controls and the route error boundary are application Client
 Components. The `/products` Server Component normalizes searchParams and calls
 getProducts once. Controls receive query values and the result count, never products
-or reviews. No browser product fetching, global stores, or memoization is used.
+or reviews. No browser product fetching or global stores are used. A route-local
+React cache wrapper deduplicates detail and metadata lookups within one request.
 Pagination uses Next.js links. System typography avoids remote font downloads. Shared styles define a 1280px container, responsive
 gutters, restrained colors, and visible keyboard focus.
 
@@ -76,7 +78,9 @@ gutters, restrained colors, and visible keyboard focus.
 All products, prices, inventory, review bodies, and reviewer names are synthetic
 assessment fixtures, not actual goods offered for sale or customer endorsements.
 The 18 reviewer names are fictional. Do not present these reviews as verified
-purchases or publish their aggregates as claims about real products.
+purchases. Product structured data describes the displayed assessment fixtures,
+including their prices, availability, and review aggregates; these are not claims
+about real goods or real customer reviews.
 
 There are 52 curated families with ten explicitly allowed size, capacity, page,
 or pack configurations each. Home & Living and Kitchen & Dining each have 100
@@ -134,9 +138,9 @@ brand partnership. See [image attribution](docs/image-attribution.md) for licens
 The synchronous server-only service exposes `getProducts(query)`,
 `getProductBySlug(slug)`, and `getRelatedProducts(product, limit?)`. Pure selection
 functions accept readonly products, so behavior can be tested with small fixtures.
-No repository classes, internal HTTP calls, caches, or search indexes are needed
-for 520 in-memory products. The listing route consumes getProducts; detail and
-related lookup are available for the later product-detail UI.
+No repository classes, internal HTTP calls, service caches, or search indexes are needed
+for 520 in-memory products. Listing and detail routes consume this service; the
+service remains framework-independent apart from its server-only import boundary.
 
 `normalizeProductQuery` accepts raw string/string-array search parameters without
 React or Next.js dependencies. Supported keys are q, category, minPrice, maxPrice,
@@ -166,8 +170,8 @@ zero totalPages. Only the requested page is returned; the catalog is never sorte
 in place. Discovery controls write URLs and reset pagination on search, filter,
 and sort changes.
 
-Slug lookup is exact and case-sensitive, returning null when missing; future
-routes own `notFound()`. Related products share the category, exclude the current
+Slug lookup is exact and case-sensitive, returning null when missing; the detail
+route owns `notFound()`. Related products share the category, exclude the current
 ID, and use the rating/title/ID ordering above. Limits default to 4, cap at 8,
 and floor positive fractions; zero/negative limits return no items, while
 non-finite or invalid programmatic values use the default.
@@ -218,4 +222,40 @@ and is reserved for the final accessibility audit.
 
 Vitest additionally covers URL updates/removal, default omission, page reset,
 encoding, rating preservation, immutability, and pagination windows. The current
-suite has 82 tests. No DOM-testing or end-to-end dependency has been introduced.
+suite includes focused metadata, configuration, structured-data, and price tests.
+No DOM-testing or end-to-end dependency has been introduced.
+
+
+## Product details and SEO
+
+The detail route awaits params, resolves the exact slug, and renders one product,
+all its reviews (at most 12), and up to four related products from the existing
+service. Metadata and page share one module-level React `cache` lookup for request
+deduplication; there is no persistent cache or internal HTTP call. Pages render on
+request rather than generating 520 pages at build time. Detail content and reviews
+introduce no Client Component. Cards use one image/title link; metadata and price
+remain outside it, leaving future purchase controls independent.
+
+One contained, square `next/image` is eager above the fold; related images are lazy.
+No gallery is needed for single-image fixtures. Reviews use a semantic list and an
+explicit empty state. Missing products return HTTP 404 with a route-local recovery
+link and noindex; the parent products error boundary handles other failures.
+Listing page/loading files live in the `(listing)` route group, which preserves
+`/products` and its loading UI without wrapping `/products/[slug]`. Detail has no
+route loading boundary: its synchronous product lookup resolves existence before
+response streaming. There is no artificial detail skeleton or delayed content.
+
+Optionally configure `SITE_URL` in the server environment (or `.env.local`) with
+the deployed site's absolute HTTP(S) origin. Use the same value at build and start.
+Do not substitute a guessed domain or a preview deployment URL. It cannot contain
+credentials, a query, fragment, or deployment subpath. Malformed values fail with
+a clear configuration error. No configured value is required for local development
+or builds; absent configuration omits canonical/OG URLs, OG images, and JSON-LD.
+Title, description, and textual Open Graph metadata remain available.
+
+With `SITE_URL`, root metadataBase and product canonical/OG URLs use that origin.
+Product JSON-LD includes actual fixture name, description, category, primary image,
+URL, USD Offer price and stock availability, and aggregateRating only for rated
+products with reviews. It excludes individual reviews and invented commerce fields.
+JSON serialization escapes `<` to prevent script termination. The fixtures remain
+synthetic; markup is not a promise of search-engine rich-result eligibility.
