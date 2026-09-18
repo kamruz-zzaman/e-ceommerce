@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ProductCard } from "@/components/product/product-card";
 import { ProductReviews } from "@/components/product/product-reviews";
+import { AddToCart } from "@/components/cart/add-to-cart";
 import { CATEGORIES } from "@/lib/categories";
 import { formatPrice } from "@/lib/format-price";
 import { parseSiteUrl, productJsonLd, productMetadata, serializeJsonLd } from "@/lib/product-seo";
@@ -41,6 +42,8 @@ export default async function ProductPage({ params }: PageProps<"/products/[slug
           <p className="detail-muted">{product.rating === null ? "Not yet rated" : `${product.rating.toFixed(1)} out of 5 · ${product.reviews.length} reviews`}</p>
           <p className="detail-price">{formatPrice(product.priceCents)}</p>
           <p className="detail-stock">{product.stock === 0 ? "Out of stock" : product.stock <= 5 ? `${product.stock} in stock` : "In stock"}</p>
+          <AddToCart key={product.id} product={{ productId: product.id, slug: product.slug, title: product.title,
+            priceCents: product.priceCents, image: product.images[0], stock: product.stock }} />
           <p className="detail-description">{product.description}</p>
         </div>
       </div>
