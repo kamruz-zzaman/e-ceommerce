@@ -220,7 +220,7 @@ export const CATALOG_IMAGES: Readonly<Record<string, ProductImage>> = {
   },
   "shopping": {
     "src": "/images/products/tote.jpg",
-    "alt": "Yellow reusable carry bag with light handles and an open top",
+    "alt": "One yellow open-top tote, representative of each bag in the two-bag set",
     "width": 394,
     "height": 591
   },

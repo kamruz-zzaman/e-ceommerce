@@ -26,6 +26,7 @@ Open http://localhost:3000.
 
 ```sh
 pnpm catalog:check
+pnpm test
 pnpm lint
 pnpm typecheck
 pnpm build
@@ -40,9 +41,10 @@ runs the lightweight catalog check; it does not regenerate data or process image
 
 The foundation includes a responsive shared header, homepage, metadata, favicon,
 and a heading-only `/products` destination. A local 520-product assessment catalog
-is available to future server-side services. Product discovery and commerce
-features are not yet implemented. shadcn/ui setup is deferred until a component
-requires it.
+is accessed through a server-only product service. Query normalization, search,
+filtering, sorting, pagination, and detail/related lookup are implemented and
+unit tested. Discovery UI and commerce features are not yet implemented.
+shadcn/ui setup is deferred until a component requires it.
 
 ## Structure and rendering
 
@@ -50,6 +52,8 @@ requires it.
 - `src/components/shared`: shared server-rendered header.
 - `src/types`: shared product, image, review, and normalized query contracts.
 - `src/lib/categories.ts`: six shared category IDs and display labels.
+- `src/lib/product-query.ts`: framework-independent URL query normalization.
+- `src/services`: pure product selection and a server-only catalog-backed service.
 - `src/data/products.generated.json`: committed generated catalog, outside `public`.
 - `src/data/products.ts`: small typed server-only catalog entry point.
 - `scripts`: curated definitions, image metadata, generator, and invariant checks.
@@ -79,7 +83,14 @@ Prices use positive integer USD cents (`priceCents`). Stock is a non-negative
 integer and includes unavailable and low-stock examples. Rated products have
 2–12 synthetic reviews, each with a 1–5 integer rating. Product ratings are the
 arithmetic mean rounded to one decimal; products without reviews use `null`,
-so absence of reviews is not misrepresented as a zero-star score.
+so absence of reviews is not misrepresented as a zero-star score. Reviews draw
+without replacement from small family-specific observation pools, with explicit
+configuration wording where useful. Generic category-wide closing sentences are
+not appended. Observations intentionally recur across compatible variants.
+
+The Everyday Tote Bag is sold singly; the Shopping Tote Pair contains two bags.
+The pair's capacity label is per bag, its price covers both, and the shared image
+represents one bag. No unpictured pockets, closures, or materials are implied.
 
 To change the catalog, edit the explicit definitions or image manifest, then run:
 
@@ -99,11 +110,11 @@ expected output, and reports counts and distributions without writing files.
 The roughly 1 MB generated output is JSON instead of a large TypeScript literal.
 The small loader has one boundary assertion for JSON's non-empty image tuple and
 narrow review-rating union; the invariant check validates the actual data before
-production builds. The loader imports `server-only`. Future services should use
+production builds. The loader imports `server-only`. The product service uses
 that entry point; components must not import the raw catalog. Shared types and
 category labels contain no dataset dependency and are safe for client controls.
-There is no product service, API route, runtime catalog generation, or data fetching
-yet, and no application component imports the catalog.
+There is no API route, runtime catalog generation, or network data fetching,
+and no application component imports the catalog.
 
 Images are local, with no runtime image-host dependency. Each product has one
 representative family image. Photos can show props or accessories and do not
@@ -111,3 +122,50 @@ represent exact fictional dimensions; no repeated view is added just to fill a
 gallery. Photography varies in framing and lighting, and several source images
 show real manufacturer markings. These are source-image details, not a fabricated
 brand partnership. See [image attribution](docs/image-attribution.md) for licenses.
+
+## Product service and query behavior
+
+The synchronous server-only service exposes `getProducts(query)`,
+`getProductBySlug(slug)`, and `getRelatedProducts(product, limit?)`. Pure selection
+functions accept readonly products, so behavior can be tested with small fixtures.
+No repository classes, internal HTTP calls, caches, or search indexes are needed
+for 520 in-memory products. Routes do not consume the service yet.
+
+`normalizeProductQuery` accepts raw string/string-array search parameters without
+React or Next.js dependencies. Supported keys are q, category, minPrice, maxPrice,
+rating, sort, and page. Repeated parameters use the first valid value before any
+fallback. Search whitespace is collapsed; an empty first search value is valid.
+Unknown categories are ignored; unknown sorts default to relevance. Numeric input
+uses decimal notation, not exponents, hexadecimal, partial numbers, or infinity.
+Prices are non-negative USD amounts with at most two decimal places and safe,
+round-trippable integer cents. Reversed price bounds are swapped. Invalid bounds
+are ignored. Positive fractional pages are floored with a minimum of one;
+invalid/zero/negative pages default to one. Rating accepts 0–5 inclusive.
+
+Listing processes search → filter → sort → paginate. Every search term must occur
+in title, description, or category display label, ignoring case. Relevance prefers
+exact normalized titles, complete title phrases, all terms in the title, then more
+title-term matches, with normalized title and stable ID breaking ties. Empty
+searches use stable ID order. Price sorts use title then ID for ties; rating sort
+places rated products before unrated, then uses descending rating, title, and ID.
+Name sort uses normalized title then ID. Text comparisons are explicit lexical
+comparisons rather than machine-locale dependent ordering.
+
+Price and rating bounds are inclusive; filters combine with AND. An absent or
+zero minimum rating includes unrated products, while a positive minimum excludes
+them. Results contain only products, total, effective page, limit (20), and
+totalPages. Excessive pages clamp to the final page; empty results use page 1 and
+zero totalPages. Only the requested page is returned; the catalog is never sorted
+in place. URL writing and resetting pagination on discovery changes belong to the
+future discovery controls.
+
+Slug lookup is exact and case-sensitive, returning null when missing; future
+routes own `notFound()`. Related products share the category, exclude the current
+ID, and use the rating/title/ID ordering above. Limits default to 4, cap at 8,
+and floor positive fractions; zero/negative limits return no items, while
+non-finite or invalid programmatic values use the default.
+
+Vitest runs in Node with small synthetic fixtures plus a few real-catalog service
+integration checks. Only that integration test mocks the `server-only` marker;
+production boundaries remain intact. Run `pnpm test` once or `pnpm test:watch`
+during development. No browser, DOM, or coverage dependency is required.

@@ -27,6 +27,7 @@ export function validateCatalog(value: unknown, publicDirectory: string): assert
   const reviewIds = new Set<string>();
   const totals = new Map<string, number>();
   const checkedImages = new Set<string>();
+  const attributionRows = readFileSync(resolve(publicDirectory, "../docs/image-attribution.md"), "utf8").split("\n");
   const categories = new Set<string>(CATEGORIES.map(({ id }) => id));
   for (const product of value) {
     requireInvariant(record(product), "invalid product object");
@@ -37,17 +38,28 @@ export function validateCatalog(value: unknown, publicDirectory: string): assert
     requireInvariant(text(product.title) && !titles.has(product.title.trim().toLowerCase()), `${product.id}: empty or duplicate title`);
     titles.add(product.title.trim().toLowerCase());
     requireInvariant(text(product.description), `${product.id}: empty description`);
+    requireInvariant(!/\b1 rulers\b/.test(`${product.title} ${product.description}`), `${product.id}: singular ruler copy`);
     requireInvariant(text(product.category) && categories.has(product.category), `${product.id}: invalid category`);
     totals.set(product.category, (totals.get(product.category) ?? 0) + 1);
     requireInvariant(integer(product.priceCents, 1), `${product.id}: invalid priceCents`);
     requireInvariant(integer(product.stock, 0), `${product.id}: invalid stock`);
     requireInvariant(Array.isArray(product.reviews), `${product.id}: invalid reviews`);
     let sum = 0;
+    const reviewBodies = new Set<string>();
+    const reviewOpenings = new Set<string>();
     for (const review of product.reviews) {
       requireInvariant(record(review), `${product.id}: invalid review`);
       requireInvariant(text(review.id) && !reviewIds.has(review.id), `${product.id}: invalid review ID`);
       reviewIds.add(review.id);
       requireInvariant(text(review.authorName) && text(review.body), `${product.id}: empty review attribution/body`);
+      const opening = review.body.split(/[.!?]\s/)[0]!;
+      requireInvariant(!reviewBodies.has(review.body) && !reviewOpenings.has(opening), `${product.id}: repeated review observation`);
+      requireInvariant(!/\{[^}]*\}/.test(review.body), `${product.id}: unresolved review placeholder`);
+      if (product.slug.startsWith("lantern-") || product.slug.startsWith("candle-holder-")) {
+        requireInvariant(!/I use it for (?:evening )?reading/i.test(review.body), `${product.id}: unsuitable candle reading claim`);
+      }
+      reviewBodies.add(review.body);
+      reviewOpenings.add(opening);
       requireInvariant(integer(review.rating, 1) && review.rating <= 5, `${product.id}: invalid review rating`);
       sum += review.rating;
     }
@@ -64,6 +76,11 @@ export function validateCatalog(value: unknown, publicDirectory: string): assert
       const path = resolve(publicDirectory, `.${image.src}`);
       requireInvariant(path.startsWith(resolve(publicDirectory) + sep) && existsSync(path), `${product.id}: missing local image ${image.src}`);
       if (!checkedImages.has(path)) {
+        const filename = image.src.split("/").at(-1)!;
+        const attributionRow = attributionRows.find((row) => row.startsWith(`| \`${filename}\` |`));
+        // Coverage check only; source/license accuracy is verified against acquisition records.
+        requireInvariant(attributionRow && attributionRow.includes("https://commons.wikimedia.org/wiki/File:")
+          && /CC BY|CC0|Public domain/.test(attributionRow), `${image.src}: missing source/license attribution`);
         const bytes = readFileSync(path);
         requireInvariant(bytes.length > 1000 && bytes[0] === 0xff && bytes[1] === 0xd8, `${image.src}: expected a JPEG image`);
         checkedImages.add(path);
