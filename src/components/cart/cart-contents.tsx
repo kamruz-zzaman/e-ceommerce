@@ -35,7 +35,10 @@ export function CartContents() {
         </ul>
         <div className="cart-summary">
           <p>Subtotal <strong>{formatPrice(totals.subtotalCents)}</strong></p>
-          <button type="button" className="text-action" onClick={() => { clearCart(); setMessage("Cart cleared."); }}>Clear cart</button>
+          <div className="cart-summary-actions">
+            <button type="button" className="text-action" onClick={() => { clearCart(); setMessage("Cart cleared."); }}>Clear cart</button>
+            <Link href="/checkout" className="commerce-button">Checkout</Link>
+          </div>
         </div>
         <Link href="/products" className="text-action">Continue browsing</Link>
       </>}
