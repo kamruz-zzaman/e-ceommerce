@@ -1,10 +1,6 @@
 export default function LoadingProducts() {
   return (
-    <main
-      id="main-content"
-      tabIndex={-1}
-      className="site-container py-8 pb-14 md:py-10 md:pb-18"
-    >
+    <main className="site-container py-8 pb-14 md:py-10 md:pb-18">
       <h1>Products</h1>
       <p role="status" className="mt-4 text-muted">
         Loading products…

@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
 import { getProductSuggestions } from "../../../../services/product-service";
+import { MAX_QUERY_LENGTH, MIN_QUERY_LENGTH } from "../../../../lib/product-suggestions";
 
 export const dynamic = "force-dynamic";
-
-const MIN_QUERY_LENGTH = 2;
-const MAX_QUERY_LENGTH = 100;
 
 
 export async function GET(request: Request) {

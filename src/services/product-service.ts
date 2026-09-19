@@ -2,14 +2,13 @@ import "server-only";
 
 import { products } from "../data/products";
 import { normalizeProductQuery } from "../lib/product-query";
+import { SUGGESTION_LIMIT } from "../lib/product-suggestions";
 import type { Product, ProductSuggestion } from "../types/product";
 import type { ProductQuery } from "../types/product-query";
 import { findProductBySlug, selectProducts, selectRelatedProducts } from "./product-selection";
 import type { ProductListResult } from "./product-selection";
 
 export type { ProductListResult } from "./product-selection";
-
-const SUGGESTION_LIMIT = 5;
 
 export function getProducts(query: ProductQuery): ProductListResult {
   return selectProducts(products, query);

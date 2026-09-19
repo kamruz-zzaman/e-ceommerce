@@ -7,13 +7,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { CATEGORIES } from "@/lib/categories";
 import { formatPrice } from "@/lib/format-price";
+import {
+  MIN_QUERY_LENGTH,
+  parseProductSuggestionResponse,
+} from "@/lib/product-suggestions";
 import type { ProductSuggestion } from "@/types/product";
 import { SearchIcon } from "@/components/icons/search-icon";
 import { CloseIcon } from "@/components/icons/close-icon";
 
 type Status = "idle" | "loading" | "results" | "empty";
 const DEBOUNCE_MS = 300;
-const MIN_QUERY_LENGTH = 2;
 
 function productsUrl(q: string) {
   const params = new URLSearchParams();
@@ -57,6 +60,11 @@ export function HeaderSearchCombobox({
   }
 
   useEffect(() => {
+    clearTimeout(debounceRef.current);
+    abortRef.current?.abort();
+  }, [pathname]);
+
+  useEffect(() => {
     if (autoFocus) inputRef.current?.focus();
   }, [autoFocus]);
 
@@ -91,10 +99,11 @@ export function HeaderSearchCombobox({
       signal: controller.signal,
     })
       .then((response) => response.json())
-      .then((data: { results: readonly ProductSuggestion[] }) => {
+      .then((raw: unknown) => {
         if (requestQueryRef.current !== value) return; // superseded by a newer query
-        setSuggestions(data.results);
-        setStatus(data.results.length > 0 ? "results" : "empty");
+        const { results } = parseProductSuggestionResponse(raw);
+        setSuggestions(results);
+        setStatus(results.length > 0 ? "results" : "empty");
       })
       .catch((error: unknown) => {
         if (error instanceof DOMException && error.name === "AbortError")

@@ -1,12 +1,21 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { HeaderSearchCombobox } from "./header-search-combobox";
 import { SearchIcon } from "@/components/icons/search-icon";
 import { CloseIcon } from "@/components/icons/close-icon";
 
 export function HeaderSearch() {
+  const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const [lastPathname, setLastPathname] = useState(pathname);
+  if (pathname !== lastPathname) {
+    setLastPathname(pathname);
+    if (mobileOpen) setMobileOpen(false);
+  }
+
   return (
     <>
       <div className="hidden lg:block lg:w-56 xl:w-64">
