@@ -62,6 +62,7 @@ export function CheckoutForm({
             id="fullName"
             type="text"
             autoComplete="name"
+            placeholder="Jane Doe"
             className={fieldClass}
             aria-invalid={errors.fullName ? true : undefined}
             aria-describedby={errors.fullName ? "fullName-error" : undefined}
@@ -85,6 +86,7 @@ export function CheckoutForm({
             id="email"
             type="email"
             autoComplete="email"
+            placeholder="jane@example.com"
             className={fieldClass}
             aria-invalid={errors.email ? true : undefined}
             aria-describedby={errors.email ? "email-error" : undefined}
@@ -108,6 +110,7 @@ export function CheckoutForm({
             id="address"
             type="text"
             autoComplete="street-address"
+            placeholder="Bangladesh, Dhaka, 1234"
             className={fieldClass}
             aria-invalid={errors.address ? true : undefined}
             aria-describedby={errors.address ? "address-error" : undefined}
@@ -132,6 +135,7 @@ export function CheckoutForm({
               id="city"
               type="text"
               autoComplete="address-level2"
+              placeholder="Dhaka"
               className={fieldClass}
               aria-invalid={errors.city ? true : undefined}
               aria-describedby={errors.city ? "city-error" : undefined}
@@ -155,6 +159,7 @@ export function CheckoutForm({
               id="postalCode"
               type="text"
               autoComplete="postal-code"
+              placeholder="12345"
               className={fieldClass}
               aria-invalid={errors.postalCode ? true : undefined}
               aria-describedby={
