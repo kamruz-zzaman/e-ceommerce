@@ -1,261 +1,306 @@
 # Future Studios BD
 
-A restrained e-commerce frontend assessment built with Next.js App Router,
-React, TypeScript, and Tailwind CSS.
+A frontend e-commerce assessment: product discovery, search, cart, and
+checkout built with the Next.js App Router.
 
-## Requirements
+## Features
 
-- Node.js 24.x (see `.nvmrc`). Next.js 16.3.5 requires Node >=20.9.0;
-  this project targets Node 24 LTS.
-- pnpm 10.17.0, declared in `package.json`.
+- 520 deterministic, locally-generated products across 6 categories
+- Search, category/price/rating filters, sorting, and numbered pagination
+- All discovery state lives in the URL — refresh, share, and back/forward all work
+- Debounced `/products` search plus a global header autocomplete for quick navigation
+- Product detail pages with stock, reviews, and related products
+- Persistent cart (localStorage) with a slide-out drawer
+- Checkout with client-side validation and a simulated order confirmation
+- Server-rendered SEO metadata, Open Graph tags, and Product JSON-LD
+- Responsive layout and keyboard-accessible controls throughout
 
-## Setup
+## Tech stack
 
-Select Node 24 with your runtime manager (`nvm use` if using nvm), then run:
+- **Next.js 16** (App Router, Turbopack)
+- **React 19**
+- **TypeScript** (strict mode)
+- **Tailwind CSS 4**
+- **Zustand** — cart state
+- **React Hook Form + Zod** — checkout form and validation
+- **Vitest** — unit and service tests
+
+No UI component library, fuzzy-search dependency, or state-management library
+beyond Zustand is used.
+
+## Getting started
+
+Requires Node 24.x (see `.nvmrc`) and pnpm 10.17.0 (declared as
+`packageManager` in `package.json`).
 
 ```sh
-node --version
-pnpm --version
-pnpm install --frozen-lockfile
+pnpm install
 pnpm dev
 ```
 
 Open http://localhost:3000.
 
-## Checks
-
 ```sh
-pnpm catalog:check
-pnpm test
-pnpm lint
-pnpm typecheck
-pnpm build
-pnpm start
+pnpm test        # Vitest unit/service tests
+pnpm lint        # ESLint, zero warnings allowed
+pnpm typecheck   # next typegen + tsc --noEmit
+pnpm build       # production build
+pnpm start       # serve the production build
 ```
 
-Typechecking generates Next.js route types before running TypeScript.
-The committed pnpm lockfile records dependency resolution. `pnpm build` first
-runs the lightweight catalog check; it does not regenerate data or process images.
+`pnpm build` runs a catalog integrity check first (`pnpm catalog:check`); it
+validates the committed product data and does not regenerate anything.
 
-## Current scope
+## Environment variables
 
-The foundation includes a responsive shared header, homepage, metadata, favicon,
-and server-rendered product discovery at `/products`. A local 520-product
-assessment catalog is accessed through a server-only product service. Query normalization, search,
-filtering, sorting, pagination, and detail/related lookup are implemented and
-unit tested. Discovery includes search, grouped filters, sorting, pagination, and
-loading/empty/error states. Server-rendered product details at `/products/[slug]`
-include reviews, related products, and product-derived SEO. Cart and checkout
-are not yet implemented.
-shadcn/ui setup is deferred until a component requires it.
-
-## Structure and rendering
-
-- `src/app`: Server Component routes and root layout, metadata, global styles.
-- `src/components/shared`: shared server-rendered header.
-- `src/components/product`: server cards/grid/pagination and interactive discovery controls.
-- `src/types`: shared product, image, review, and normalized query contracts.
-- `src/lib/categories.ts`: six shared category IDs and display labels.
-- `src/lib/product-query.ts`: framework-independent URL query normalization.
-- `src/lib/product-url.ts`: deterministic discovery URLs and the page-number window.
-- `src/services`: pure product selection and a server-only catalog-backed service.
-- `src/data/products.generated.json`: committed generated catalog, outside `public`.
-- `src/data/products.ts`: small typed server-only catalog entry point.
-- `scripts`: curated definitions, image metadata, generator, and invariant checks.
-- `public/images/products`: 51 local representative product photographs.
-- `docs/image-attribution.md`: image source, author, license, and reuse information.
-
-Only discovery controls and the route error boundary are application Client
-Components. The `/products` Server Component normalizes searchParams and calls
-getProducts once. Controls receive query values and the result count, never products
-or reviews. No browser product fetching or global stores are used. A route-local
-React cache wrapper deduplicates detail and metadata lookups within one request.
-Pagination uses Next.js links. System typography avoids remote font downloads. Shared styles define a 1280px container, responsive
-gutters, restrained colors, and visible keyboard focus.
-
-## Catalog fixtures
-
-All products, prices, inventory, review bodies, and reviewer names are synthetic
-assessment fixtures, not actual goods offered for sale or customer endorsements.
-The 18 reviewer names are fictional. Do not present these reviews as verified
-purchases. Product structured data describes the displayed assessment fixtures,
-including their prices, availability, and review aggregates; these are not claims
-about real goods or real customer reviews.
-
-There are 52 curated families with ten explicitly allowed size, capacity, page,
-or pack configurations each. Home & Living and Kitchen & Dining each have 100
-products; Office & Stationery, Lighting, Bags & Everyday Carry, and Outdoor &
-Garden each have 80. Descriptions are practical family-specific copy with explicit
-configuration specifications. Compatible configurations intentionally share copy
-and imagery; this is not 520 independently photographed products.
-
-Prices use positive integer USD cents (`priceCents`). Stock is a non-negative
-integer and includes unavailable and low-stock examples. Rated products have
-2–12 synthetic reviews, each with a 1–5 integer rating. Product ratings are the
-arithmetic mean rounded to one decimal; products without reviews use `null`,
-so absence of reviews is not misrepresented as a zero-star score. Reviews draw
-without replacement from small family-specific observation pools, with explicit
-configuration wording where useful. Generic category-wide closing sentences are
-not appended. Observations intentionally recur across compatible variants.
-
-The Everyday Tote Bag is sold singly; the Shopping Tote Pair contains two bags.
-The pair's capacity label is per bag, its price covers both, and the shared image
-represents one bag. No unpictured pockets, closures, or materials are implied.
-
-To change the catalog, edit the explicit definitions or image manifest, then run:
+`SITE_URL` is optional and is not a secret.
 
 ```sh
-pnpm catalog:generate
-pnpm catalog:check
+SITE_URL=https://example.com
 ```
 
-Node 24 runs these TypeScript development scripts directly; no runner is needed.
-The package uses ES modules. Generation uses the fixed `fsb-catalog-v1` seed and
-field-specific SHA-256 choices keyed by family/configuration, without randomness,
-timestamps, or position-based product IDs. IDs and slugs retain the authored keys.
-Output is serialized in ID order for stable diffs; this is not discovery sorting.
-`catalog:check` validates the committed JSON, compares it byte-for-byte with the
-expected output, and reports counts and distributions without writing files.
+When set to a valid absolute HTTP(S) origin (no path, query, or credentials),
+product pages emit absolute-URL-dependent SEO: canonical links, Open Graph
+URL/image, and Product JSON-LD. Without it, the app runs normally and simply
+omits those fields — title, description, and text metadata are unaffected.
 
-The roughly 1 MB generated output is JSON instead of a large TypeScript literal.
-The small loader has one boundary assertion for JSON's non-empty image tuple and
-narrow review-rating union; the invariant check validates the actual data before
-production builds. The loader imports `server-only`. The product service uses
-that entry point; components must not import the raw catalog. Shared types and
-category labels contain no dataset dependency and are safe for client controls.
-There is no API route, runtime catalog generation, or network data fetching,
-and no application component imports the catalog.
+## Architecture overview
 
-Images are local, with no runtime image-host dependency. Each product has one
-representative family image. Photos can show props or accessories and do not
-represent exact fictional dimensions; no repeated view is added just to fill a
-gallery. Photography varies in framing and lighting, and several source images
-show real manufacturer markings. These are source-image details, not a fabricated
-brand partnership. See [image attribution](docs/image-attribution.md) for licenses.
+- **App Router**, with Server Components for anything that only reads and
+  renders catalog data (listing, product cards, product details, related
+  products, homepage sections, SEO metadata).
+- A small set of **Client Components** handle interaction: search/filter
+  controls, the header autocomplete, the cart drawer and its trigger, cart
+  hydration, and the checkout form.
+- A **server-only product service** (`src/services`) is the single access
+  point to the catalog; no component imports the raw data directly.
+- The **URL is the source of truth** for product discovery (search, filters,
+  sort, page) — there is no separate client-side discovery store.
+- **Zustand** holds cart state, the one piece of state that genuinely needs
+  to persist and be shared across routes.
+- **React Context** is used only for the cart drawer's open/closed UI state,
+  which is intentionally not persisted.
+- **React Hook Form + Zod** drive the checkout form.
+- A **Route Handler** (`/api/products/suggest`) powers the header
+  autocomplete by calling into the same product service the listing page
+  uses.
 
-## Product service and query behavior
+## Server vs. Client Components
 
-The synchronous server-only service exposes `getProducts(query)`,
-`getProductBySlug(slug)`, and `getRelatedProducts(product, limit?)`. Pure selection
-functions accept readonly products, so behavior can be tested with small fixtures.
-No repository classes, internal HTTP calls, service caches, or search indexes are needed
-for 520 in-memory products. Listing and detail routes consume this service; the
-service remains framework-independent apart from its server-only import boundary.
+Server Components are the default. A component only becomes a Client
+Component when it genuinely needs a browser capability: local state, event
+handlers, `localStorage`, or a native `<dialog>`. In this codebase that's the
+search/filter controls, the header autocomplete, the cart drawer/trigger/
+add-to-cart button, the checkout form, and the route error boundaries Next.js
+requires to be client-rendered.
 
-`normalizeProductQuery` accepts raw string/string-array search parameters without
-React or Next.js dependencies. Supported keys are q, category, minPrice, maxPrice,
-rating, sort, and page. Repeated parameters use the first valid value before any
-fallback. Search whitespace is collapsed; an empty first search value is valid.
-Unknown categories are ignored; unknown sorts default to relevance. Numeric input
-uses decimal notation, not exponents, hexadecimal, partial numbers, or infinity.
-Prices are non-negative USD amounts with at most two decimal places and safe,
-round-trippable integer cents. Reversed price bounds are swapped. Invalid bounds
-are ignored. Positive fractional pages are floored with a minimum of one;
-invalid/zero/negative pages default to one. Rating accepts 0–5 inclusive.
+Everything else — product listing, product cards, product detail pages,
+related products, homepage sections, and SEO metadata generation — stays on
+the server. This keeps the ~520-product catalog and all review/description
+data out of the client bundle entirely: the browser never fetches or holds
+the full catalog, only the page of results the server already rendered (or,
+for autocomplete, a handful of minimal suggestion objects from the Route
+Handler). It also keeps the interactive surface area small and easy to
+reason about, since each Client Component owns a narrow, well-defined job
+rather than wrapping large chunks of otherwise-static markup.
 
-Listing processes search → filter → sort → paginate. Every search term must occur
-in title, description, or category display label, ignoring case. Relevance prefers
-exact normalized titles, complete title phrases, all terms in the title, then more
-title-term matches, with normalized title and stable ID breaking ties. Empty
-searches use stable ID order. Price sorts use title then ID for ties; rating sort
-places rated products before unrated, then uses descending rating, title, and ID.
-Name sort uses normalized title then ID. Text comparisons are explicit lexical
-comparisons rather than machine-locale dependent ordering.
+## Product dataset
 
-Price and rating bounds are inclusive; filters combine with AND. An absent or
-zero minimum rating includes unrated products, while a positive minimum excludes
-them. Results contain only products, total, effective page, limit (20), and
-totalPages. Excessive pages clamp to the final page; empty results use page 1 and
-zero totalPages. Only the requested page is returned; the catalog is never sorted
-in place. Discovery controls write URLs and reset pagination on search, filter,
-and sort changes.
+The catalog (520 products) is generated deterministically from explicit
+definitions in `scripts/catalog-definitions.ts` and committed as
+`src/data/products.generated.json` — there is no external commerce API and
+no database. Generation is seeded and produces stable IDs, slugs, prices,
+stock levels, and review data on every run; `pnpm catalog:check` verifies the
+committed file still matches that deterministic output byte-for-byte.
 
-Slug lookup is exact and case-sensitive, returning null when missing; the detail
-route owns `notFound()`. Related products share the category, exclude the current
-ID, and use the rating/title/ID ordering above. Limits default to 4, cap at 8,
-and floor positive fractions; zero/negative limits return no items, while
-non-finite or invalid programmatic values use the default.
+This fits the assessment well: the app is fully offline-capable, every test
+run sees the same data, and there's no dependency on a third-party service's
+availability or rate limits. All products, prices, and reviews are synthetic
+fixtures — see [docs/image-attribution.md](docs/image-attribution.md) for
+image sourcing.
 
-Vitest runs in Node with small synthetic fixtures plus a few real-catalog service
-integration checks. Only that integration test mocks the `server-only` marker;
-production boundaries remain intact. Run `pnpm test` once or `pnpm test:watch`
-during development. No browser, DOM, or coverage dependency is required.
+## Product discovery & URL state
 
+`/products` accepts these query parameters, all validated and normalized
+server-side:
 
-## Discovery interaction and accessibility
+| Param | Meaning |
+|---|---|
+| `q` | search text |
+| `category` | one of the six category IDs |
+| `minPrice` / `maxPrice` | USD bounds |
+| `rating` | minimum rating (0–5) |
+| `sort` | relevance / price / rating / name |
+| `page` | 1-indexed page number |
 
-Search submits explicitly with Enter or Search. Category, USD price bounds, and
-minimum rating commit together with Apply filters. One native details/summary
-filter form works across desktop and mobile. Invalid typed prices receive native
-validation feedback. Sorting commits immediately using committed filters, without
-submitting unsaved drafts. Clear search removes only q; Clear all returns to
-/products. Generated URLs omit empty/default values, preserve rating=0, and keep
-all active discovery parameters during pagination. Manually entered non-canonical
-URLs are rendered safely without cosmetic redirects.
+The URL is the only source of truth for discovery state. Invalid or
+malformed values (a negative page, an out-of-range rating, an unknown
+category) normalize safely rather than erroring. Changing a filter or the
+search term resets pagination to page 1; changing the page preserves every
+other active parameter. Because the URL fully describes the view: refreshing,
+sharing a link, and using browser Back/Forward all reproduce the exact same
+result set, server-rendered.
 
-Rating presets are Any rating and 4/3/2/1 and above. A custom URL minimum such as
-4.25 is described below the control and retained with a fixed Keep current setting
-choice until a preset is selected. No arbitrary numeric preset is manufactured.
-Uncontrolled form inputs hold temporary drafts; query-keyed forms reset them on
-committed navigation and history changes. A form ref preserves keyboard focus
-when a keyed form is replaced. No URL synchronization effect is used.
+## Search behavior
 
-Controls have associated labels, native keyboard behavior, visible focus, and
-44px-or-larger targets. A single local live region reports pending navigation and
-result counts. Route loading uses static placeholders; empty results retain the
-controls and Clear all. The route error boundary offers retry and a default-products
-link without exposing technical details. Error recovery was not artificially
-triggered during browser verification.
+Two distinct search surfaces, for two distinct purposes:
 
-Cards render at most 20 products, with category, textual rating/review count, USD
-price, and useful stock information. Titles wrap without truncation. Local next/image
-images reserve square space and use responsive sizes with object containment.
-Browser inspection identified the first product image as an LCP candidate, so only
-that image uses eager loading; other images remain lazy. Product data/review bodies
-stay in Server Components, not client control props or client JavaScript.
+**`/products` search** — part of discovery. Typing updates the input
+immediately; after ~300ms of inactivity the URL updates automatically via
+`router.replace` (so incidental keystrokes don't pollute browser history).
+Pressing Enter or the Search button commits immediately instead. Results are
+always rendered server-side from the URL.
 
-The grid uses one column at narrow reflow widths, two at phone widths from 360px,
-three from 768px, and four from 1024px within the 1280px container. Manual checks
-covered 320/375/768/1024/1440px, URL/history behavior, keyboard forms/disclosure,
-focus, empty results, and pagination. Actual 200% browser zoom remains unverified
-and is reserved for the final accessibility audit.
+**Header autocomplete** — a quick-navigation shortcut available from any
+page. Starts suggesting after 2 characters, debounced ~300ms, capped at 5
+results. Backed by `GET /api/products/suggest`, which validates and
+length-limits the query server-side and reuses the exact same ranking logic
+as the listing page (no duplicated search implementation). The response is a
+minimal `{ slug, title, category, priceCents, image }` per result — no
+descriptions, reviews, or stock data cross the wire. In-flight requests are
+cancelled (`AbortController`) when superseded or when the user navigates
+away, and a stale response can never overwrite newer results. The combobox
+follows the standard ARIA combobox/listbox pattern (arrow keys, Enter,
+Escape, `aria-activedescendant`). "View all results" and Enter-without-a-
+selection both land on the same canonical `/products?q=...` URL the listing
+page owns.
 
-Vitest additionally covers URL updates/removal, default omission, page reset,
-encoding, rating preservation, immutability, and pagination windows. The current
-suite includes focused metadata, configuration, structured-data, and price tests.
-No DOM-testing or end-to-end dependency has been introduced.
+## Data / service layer
 
+The server-only service (`src/services/product-service.ts`) exposes:
 
-## Product details and SEO
+- `getProducts(query)` — search → filter → sort → paginate, in that order
+- `getProductBySlug(slug)`
+- `getRelatedProducts(product, limit?)` — same category, excludes the
+  current product, capped and defaulted
+- `getProductSuggestions(q)` — the autocomplete's minimal result shape
 
-The detail route awaits params, resolves the exact slug, and renders one product,
-all its reviews (at most 12), and up to four related products from the existing
-service. Metadata and page share one module-level React `cache` lookup for request
-deduplication; there is no persistent cache or internal HTTP call. Pages render on
-request rather than generating 520 pages at build time. Detail content and reviews
-introduce no Client Component. Cards use one image/title link; metadata and price
-remain outside it, leaving future purchase controls independent.
+Selection is pure and deterministic: every sort has an explicit tie-breaker
+(title, then ID) so ordering never varies between runs, and the underlying
+catalog array is never mutated. The Route Handler and the listing page share
+the same selection function, so autocomplete ordering and listing ordering
+are guaranteed to agree.
 
-One contained, square `next/image` is eager above the fold; related images are lazy.
-No gallery is needed for single-image fixtures. Reviews use a semantic list and an
-explicit empty state. Missing products return HTTP 404 with a route-local recovery
-link and noindex; the parent products error boundary handles other failures.
-Listing page/loading files live in the `(listing)` route group, which preserves
-`/products` and its loading UI without wrapping `/products/[slug]`. Detail has no
-route loading boundary: its synchronous product lookup resolves existence before
-response streaming. There is no artificial detail skeleton or delayed content.
+## Cart
 
-Optionally configure `SITE_URL` in the server environment (or `.env.local`) with
-the deployed site's absolute HTTP(S) origin. Use the same value at build and start.
-Do not substitute a guessed domain or a preview deployment URL. It cannot contain
-credentials, a query, fragment, or deployment subpath. Malformed values fail with
-a clear configuration error. No configured value is required for local development
-or builds; absent configuration omits canonical/OG URLs, OG images, and JSON-LD.
-Title, description, and textual Open Graph metadata remain available.
+Cart state lives in a Zustand store, persisted to `localStorage` under a
+versioned envelope. The persisted shape per item is intentionally minimal —
+product identity, slug, title, price, image, stock, and quantity — not a
+full product record. Malformed or unrecognized storage content is discarded
+rather than trusted; the UI distinguishes "cart not yet loaded from storage"
+from "loaded and genuinely empty" and won't mutate state before hydration
+completes. Quantities are clamped to available stock, and adding a product
+already in the cart refreshes its stored price/title/image/stock from the
+snapshot passed in at that moment (it does not poll or revalidate against
+the catalog in the background). Totals are always computed from the current
+items, never stored separately.
 
-With `SITE_URL`, root metadataBase and product canonical/OG URLs use that origin.
-Product JSON-LD includes actual fixture name, description, category, primary image,
-URL, USD Offer price and stock availability, and aggregateRating only for rated
-products with reviews. It excludes individual reviews and invented commerce fields.
-JSON serialization escapes `<` to prevent script termination. The fixtures remain
-synthetic; markup is not a promise of search-engine rich-result eligibility.
+## Cart drawer
+
+The drawer is a native `<dialog>`, opened by the cart icon or automatically
+after a successful "Add to cart." Its open/closed state is ephemeral UI
+state held in a small React Context — not persisted, and separate from the
+cart data itself, which comes from the same Zustand store the full `/cart`
+page uses. "View cart" and "Checkout" navigate normally from there.
+
+## Checkout
+
+A single-step form (React Hook Form + Zod) collecting full name, email,
+address, city, postal code, and country, with inline, accessible validation
+errors. Submission is guarded against duplicate clicks, then simulated
+(there is no payment processor and no backend order system — the "order" is
+a client-side confirmation snapshot taken before the cart is cleared).
+Refreshing the confirmation screen does not restore it, since nothing is
+persisted server-side; this is an intentional scope boundary, not a bug.
+
+## SEO
+
+Product pages use `generateMetadata` for title/description, and — only when
+`SITE_URL` is configured — a canonical URL, Open Graph tags, and Product
+JSON-LD (price, currency, availability, and an aggregate rating only when
+the product actually has reviews). No fabricated brand, SKU, or seller
+fields are included. Requesting a nonexistent product slug returns a true
+HTTP 404 (via `notFound()`), not a soft "not found" page served with a 200.
+
+## Performance decisions
+
+- Listing and detail pages are server-rendered per request rather than
+  pre-building all 520 product pages at build time.
+- Autocomplete requests are debounced, cancelled when superseded, and
+  return a minimal payload — not the full product shape.
+- React Hook Form and Zod are loaded only on the checkout route, not
+  globally.
+- Product images use `next/image` with responsive `sizes` and reserved
+  aspect ratios; only the single above-the-fold detail image is marked a
+  priority/eager load.
+- No `useMemo`/`useCallback`/`memo` is applied speculatively — this app's
+  render costs are small and none were found to need it; a couple of
+  stable callbacks in the cart drawer's Context provider are memoized
+  because they're passed down through Context and used as effect
+  dependencies elsewhere.
+
+## Accessibility
+
+- Semantic landmarks (`header`, `nav`, `main`, `footer`) and a skip-to-
+  content link.
+- One `<h1>` per page and a consistent heading hierarchy.
+- Labeled form controls with accessible, per-field validation errors.
+- Visible focus states and a logical keyboard tab order throughout,
+  including the filter disclosure, pagination, and checkout form.
+- The header autocomplete follows the ARIA combobox/listbox pattern
+  (`aria-expanded`, `aria-controls`, `aria-activedescendant`), with full
+  keyboard and mouse support and no keyboard trap.
+- The cart drawer is a native `<dialog>`, which provides a standard focus
+  trap and keyboard/backdrop dismissal without custom JavaScript.
+- Verified across 320–1440px viewport widths, with no horizontal overflow.
+
+## Testing
+
+Vitest covers the parts of the app where correctness matters most and is
+cheapest to verify without a browser: query normalization, search/filter/
+sort/pagination behavior and its tie-breaking rules, product and related-
+product lookup, the autocomplete service and its Route Handler (including
+input validation and response shape), cart persistence/sanitization/actions,
+and the checkout schema and order-confirmation sequencing. Interactive/UI
+behavior (keyboard navigation, focus, drawer dismissal, responsive layout)
+is verified manually in a real browser rather than through a DOM-testing or
+end-to-end framework.
+
+## Project structure
+
+```
+src/
+  app/          Routes, layout, root metadata, global styles
+  components/   UI, grouped by feature (product, cart, checkout, home, shared)
+  data/         Generated product catalog + its server-only loader
+  lib/          Framework-independent helpers (query, URL, cart, SEO, ...)
+  schemas/      Zod schemas
+  services/     Server-only product service and pure selection logic
+  stores/       Zustand cart store
+  types/        Shared TypeScript types
+scripts/        Catalog definitions, image manifest, generator, validator
+docs/           Image attribution
+```
+
+## Key trade-offs / scope
+
+These are deliberate choices for the scope of this assessment, not
+oversights:
+
+- A local, deterministic dataset instead of a real commerce backend —
+  reproducible, offline, and stable for testing.
+- Numbered pagination instead of infinite scroll.
+- URL state instead of a global discovery store.
+- Zustand only for cart state; everything else uses local state, URL state,
+  or plain server rendering.
+- No authentication, payment processing, or backend order persistence — the
+  checkout confirmation is intentionally session-only.
+- No inventory-synchronization service; cart items refresh against the
+  catalog when re-added, not continuously in the background.
+- No fuzzy-search dependency; ranking is explicit and deterministic.
+
+## Design
+
+A restrained, content-first storefront: product imagery is prioritized,
+spacing and typography stay consistent, and interaction feedback (loading,
+pending, success states) is deliberately understated rather than flashy.
