@@ -5,7 +5,11 @@ export const metadata: Metadata = { title: "Checkout" };
 
 export default function CheckoutPage() {
   return (
-    <main id="main-content" tabIndex={-1} className="site-container page-content checkout-page">
+    <main
+      id="main-content"
+      tabIndex={-1}
+      className="site-container py-8 pb-16 md:py-10"
+    >
       <h1>Checkout</h1>
       <CheckoutExperience />
     </main>

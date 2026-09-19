@@ -35,16 +35,19 @@ export function CheckoutExperience() {
 
   if (!hydrated)
     return (
-      <p className="checkout-pending" role="status">
+      <p className="mt-7 text-muted" role="status">
         Loading checkout…
       </p>
     );
   if (confirmation) return <Confirmation data={confirmation} />;
   if (items.length === 0) {
     return (
-      <div className="empty-cart">
+      <div className="mt-7">
         <p>Your cart is empty.</p>
-        <Link href="/products" className="text-action">
+        <Link
+          href="/products"
+          className="mt-3 inline-flex min-h-11 items-center text-accent underline underline-offset-[3px] hover:text-accent-hover"
+        >
           Browse products
         </Link>
       </div>
@@ -52,7 +55,7 @@ export function CheckoutExperience() {
   }
   const totals = cartTotals(items)!; // All cart entry points enforce safe integer totals.
   return (
-    <div className="checkout-layout">
+    <div className="mt-7 grid gap-10 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
       <CheckoutForm onPlaceOrder={placeOrder} />
       <OrderSummary items={items} totals={totals} />
     </div>

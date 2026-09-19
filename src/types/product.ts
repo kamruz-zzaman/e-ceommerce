@@ -30,3 +30,11 @@ export interface Product {
   /** Non-empty and unique by src, checked before writing and on every build. */
   readonly images: readonly [ProductImage, ...ProductImage[]];
 }
+
+export interface ProductSuggestion {
+  readonly slug: string;
+  readonly title: string;
+  readonly category: CategoryId;
+  readonly priceCents: number;
+  readonly image: ProductImage;
+}

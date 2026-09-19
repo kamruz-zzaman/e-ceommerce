@@ -1,14 +1,21 @@
 "use client";
 
-import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { TextActionLink } from "@/components/ui/text-action";
 
 export default function ProductError({ reset }: { reset: () => void }) {
-  return <main id="main-content" tabIndex={-1} className="site-container page-content products-page">
-    <h1>Products couldn’t load</h1>
-    <p className="intro">Please try again.</p>
-    <div className="error-actions">
-      <button className="commerce-button" onClick={reset}>Try again</button>
-      <Link className="text-action" href="/products">Back to all products</Link>
-    </div>
-  </main>;
+  return (
+    <main
+      id="main-content"
+      tabIndex={-1}
+      className="site-container py-8 pb-14 md:py-10 md:pb-18"
+    >
+      <h1>Products couldn’t load</h1>
+      <p className="mt-4 max-w-prose text-muted">Please try again.</p>
+      <div className="mt-6 flex flex-wrap items-center gap-5">
+        <Button onClick={reset}>Try again</Button>
+        <TextActionLink href="/products">Back to all products</TextActionLink>
+      </div>
+    </main>
+  );
 }
